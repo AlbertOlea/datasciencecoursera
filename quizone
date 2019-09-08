@@ -1,0 +1,75 @@
+setwd("C:/Users/Allbert/Downloads/rprog_data_specdata")
+
+
+##Part One
+
+pollutantmean <- function(directory, pollutant, id = 1:332) {
+  
+  ## Directory
+  directory <- paste(getwd(), "/", directory, "/", sep="")
+  
+  ## Pollutant variable "form a list of files in the directory"
+  file_list <- list.files(directory)
+  data <- NA
+
+  ## id "turn all files into one giant csv"
+  for (i in id){
+    file_dir <- paste(directory, file_list[i], sep="")
+    file_data <- read.csv(file_dir)
+    
+    data <- rbind(data, file_data)
+  }
+  
+  ## Return the mean of the 'id' vector and ommit NA values
+  mean(data[[pollutant]], na.rm = TRUE)
+}
+
+
+
+##Part Two 
+
+complete <- function(directory, id = 1:332) {
+  ## 'directory' is a character vector of length 1 indicating the location of
+  ## the CSV files
+  
+  ## 'id' is an integer vector indicating the monitor ID numbers to be used
+  
+  ## Return a data frame of the form: id nobs 1 117 2 1041 ...  where 'id' is
+  ## the monitor ID number and 'nobs' is the number of complete cases
+  nobs = numeric()
+  for (i in id) {
+    
+    file_data = read.csv(paste(directory, "/", formatC(i, width = 3, flag = "0"), 
+                             ".csv", sep = ""))
+    nobs = c(nobs, sum(complete.cases(file_data)))
+  }
+  return(data.frame(id, nobs))
+}
+complete("specdata", c(2, 4, 8, 10, 12))
+
+
+##Part Three
+
+corr <- function(directory, threshold = 0) {
+  ## 'directory' is a character vector of length 1 indicating the location of
+  ## the CSV files
+  
+  ## 'threshold' is a numeric vector of length 1 indicating the number of
+  ## completely observed observations (on all variables) required to compute
+  ## the correlation between nitrate and sulfate; the default is 0
+  
+  ## Return a numeric vector of correlations
+  df = complete(directory)
+  ids = df[df["nobs"] > threshold, ]$id
+  corrr = numeric()
+  for (i in ids) {
+    
+    newRead = read.csv(paste(directory, "/", formatC(i, width = 3, flag = "0"), 
+                             ".csv", sep = ""))
+    dff = newRead[complete.cases(newRead), ]
+    corrr = c(corrr, cor(dff$sulfate, dff$nitrate))
+  }
+  return(corrr)
+}
+cr <- corr("specdata", 150)
+head(cr)
